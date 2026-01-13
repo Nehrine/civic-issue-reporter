@@ -187,4 +187,3 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     );
   }
 }
-
