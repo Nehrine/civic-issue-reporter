@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ReportIssueScreen extends StatefulWidget {
   const ReportIssueScreen({super.key});
@@ -14,12 +16,26 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
 
+  final ImagePicker _picker = ImagePicker();
+  XFile? _selectedImage;
+
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? image =
+        await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _selectedImage = image;
+      });
+    }
   }
 
   void _submitIssue() {
@@ -33,6 +49,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       _titleController.clear();
       _descriptionController.clear();
       _locationController.clear();
+      setState(() {
+        _selectedImage = null;
+      });
     }
   }
 
@@ -66,6 +85,38 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
+                      // IMAGE PICKER
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          height: 180,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: _selectedImage == null
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.camera_alt,
+                                        size: 40, color: Colors.grey),
+                                    SizedBox(height: 8),
+                                    Text('Tap to add image'),
+                                  ],
+                                )
+                              : ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    _selectedImage!.path,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
                       TextFormField(
                         controller: _titleController,
                         decoration: const InputDecoration(
