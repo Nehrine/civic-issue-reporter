@@ -1,6 +1,5 @@
-import 'report_issue_screen.dart';
-
 import 'package:flutter/material.dart';
+import 'report_issue_screen.dart';
 
 void main() {
   runApp(const CivicIssueApp());
@@ -12,8 +11,8 @@ class CivicIssueApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Civic Issue App',
       debugShowCheckedModeBanner: false,
+      title: 'Civic Issue Reporter',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -37,40 +36,27 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.report_problem,
-              size: 80,
-              color: Colors.orange,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Report Civic Issues Easily',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 40),
-
-            // Report Issue Button
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+              ),
               onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const ReportIssueScreen(),
-    ),
-  );
-},
-
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ReportIssueScreen(),
+                  ),
+                );
+              },
               child: const Text('Report an Issue'),
             ),
-            const SizedBox(height: 15),
-
-            // View Issues Button
-            OutlinedButton(
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+              ),
               onPressed: () {
-                // later: navigate to issue list
+                // View Issues screen will be added later
               },
               child: const Text('View Reported Issues'),
             ),
@@ -80,3 +66,4 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+

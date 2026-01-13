@@ -30,7 +30,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         ),
       );
 
-      // Clear form
       _titleController.clear();
       _descriptionController.clear();
       _locationController.clear();
@@ -49,58 +48,86 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Issue Title',
-                  border: OutlineInputBorder(),
+              const Text(
+                'Issue Details',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter issue title';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 16),
 
-              TextFormField(
-                controller: _descriptionController,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please describe the issue';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _titleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Issue Title',
+                          prefixIcon: Icon(Icons.report_problem),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter issue title';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
 
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(
-                  labelText: 'Location',
-                  border: OutlineInputBorder(),
+                      TextFormField(
+                        controller: _descriptionController,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          labelText: 'Description',
+                          prefixIcon: Icon(Icons.description),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please describe the issue';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _locationController,
+                        decoration: const InputDecoration(
+                          labelText: 'Location',
+                          prefixIcon: Icon(Icons.location_on),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter location';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter location';
-                  }
-                  return null;
-                },
               ),
+
               const SizedBox(height: 24),
 
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: _submitIssue,
+                icon: const Icon(Icons.send),
+                label: const Text('Submit Issue'),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
+                  textStyle: const TextStyle(fontSize: 16),
                 ),
-                child: const Text('Submit Issue'),
               ),
             ],
           ),
