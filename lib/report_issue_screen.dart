@@ -49,6 +49,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       _titleController.clear();
       _descriptionController.clear();
       _locationController.clear();
+
       setState(() {
         _selectedImage = null;
       });
@@ -100,17 +101,21 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                               ? Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: const [
-                                    Icon(Icons.camera_alt,
-                                        size: 40, color: Colors.grey),
+                                    Icon(
+                                      Icons.camera_alt,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
                                     SizedBox(height: 8),
                                     Text('Tap to add image'),
                                   ],
                                 )
                               : ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    _selectedImage!.path,
+                                  child: Image.file(
+                                    File(_selectedImage!.path),
                                     fit: BoxFit.cover,
+                                    width: double.infinity,
                                   ),
                                 ),
                         ),
@@ -187,3 +192,4 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     );
   }
 }
+
