@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'report_issue_screen.dart';
+import 'issue_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,8 +64,16 @@ class HomeScreen extends StatelessWidget {
                 minimumSize: const Size(double.infinity, 50),
               ),
               onPressed: () {
-                // View Issues screen will be added later
-              },
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const IssueListScreen(),
+    ),
+  );
+},
+
+                
+            
               child: const Text('View Reported Issues'),
             ),
           ],
