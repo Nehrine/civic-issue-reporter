@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'login_screen.dart';
+import 'auth/login_page.dart';
+import 'auth/signup_page.dart';
+import 'dashboard/dashboard_page.dart';
+import 'report_issue_screen.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  }
-
-  runApp(const MyApp());
+void main() {
+  runApp(const CivicIssueApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+/// TEMP auth state (NO Firebase yet)
+class CivicIssueApp extends StatelessWidget {
+  const CivicIssueApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
+      title: 'Civic Issue Reporter',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => LoginPage(),
+        '/signup': (context) => SignupPage(),
+        '/dashboard': (context) => DashboardPage(),
+        '/report': (context) => const ReportIssueScreen(),
+      },
     );
   }
 }
