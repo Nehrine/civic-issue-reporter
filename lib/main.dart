@@ -1,7 +1,11 @@
+/*
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'report_issue_screen.dart';
+import 'auth/login_page.dart';
+import 'dashboard/dashboard_page.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,10 +27,13 @@ class CivicIssueApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const HomeScreen(),
+      initialRoute: '/',
+      routes: {    '/': (context) => const LoginPage(),
+    '/dashboard': (context) => const DashboardPage(),},
     );
   }
 }
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -73,3 +80,54 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+*/
+import 'package:flutter/material.dart';
+import 'auth/login_page.dart';
+import 'auth/signup_page.dart';
+import 'dashboard/dashboard_page.dart';
+import 'report_issue_screen.dart';
+
+void main() {
+  runApp(const CivicIssueApp());
+}
+
+/// Fake auth state (TEMPORARY)
+/// Tomorrow-ready solution, not production auth
+class AuthState extends ChangeNotifier {
+  bool _isLoggedIn = false;
+
+  bool get isLoggedIn => _isLoggedIn;
+
+  void login() {
+    _isLoggedIn = true;
+    notifyListeners();
+  }
+
+  void logout() {
+    _isLoggedIn = false;
+    notifyListeners();
+  }
+}
+
+class CivicIssueApp extends StatelessWidget {
+  const CivicIssueApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Civic Issue Reporter',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => LoginPage(),
+        '/signup': (context) => SignupPage(),
+        '/dashboard': (context) => DashboardPage(),
+        '/report': (context) => const ReportIssueScreen(),
+      },
+    );
+  }
+}
+
