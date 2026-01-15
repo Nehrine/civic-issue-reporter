@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ReportIssueScreen extends StatefulWidget {
   const ReportIssueScreen({super.key});
@@ -38,23 +39,37 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     }
   }
 
-  void _submitIssue() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Issue submitted successfully!'),
-        ),
-      );
+// Submit issue details to Firestore
+void _submitIssue() async {
+  if (_formKey.currentState!.validate()) {
+    await FirebaseFirestore.instance.collection('issues').add({
+      'title': _titleController.text.trim(),
+      'description': _descriptionController.text.trim(),
+      'location': _locationController.text.trim(),
 
-      _titleController.clear();
-      _descriptionController.clear();
-      _locationController.clear();
+      // Metadata
+      'createdAt': Timestamp.now(),
+      'status': 'pending',
 
-      setState(() {
-        _selectedImage = null;
-      });
-    }
+      // Community interaction
+      'upvotes': 0,
+      'flags': 0,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Issue submitted successfully')),
+    );
+
+    // Clear form after submission
+    _titleController.clear();
+    _descriptionController.clear();
+    _locationController.clear();
+
+    setState(() {
+      _selectedImage = null;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
