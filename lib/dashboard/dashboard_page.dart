@@ -1,136 +1,75 @@
 import 'package:flutter/material.dart';
-import '../report_issue_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+// ✅ Use this exact line
+import 'package:google_sign_in/google_sign_in.dart';
+import '../report_issue_screen.dart'; // Make sure this import path is correct
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
+  // ✅ CORRECT LOGOUT FUNCTION
+  Future<void> _logout(BuildContext context) async {
+    try {
+      // 1. Sign out of Google (Crucial for switching accounts)
+      await GoogleSignIn().signOut();
+      
+      // 2. Sign out of Firebase
+      await FirebaseAuth.instance.signOut();
+
+      // 3. Navigate back to Login and remove all previous screens
+      if (context.mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Logout Error: $e")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
-        centerTitle: true,
+        title: const Text("Civic Dashboard"),
+        actions: [
+          // LOGOUT BUTTON
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(context), 
+            tooltip: "Logout",
+          ),
+        ],
       ),
-
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Header
-            const Text(
-              'Welcome 👋',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Here’s your civic activity so far',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Stats cards
-            Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    icon: Icons.report,
-                    label: 'Issues Reported',
-                    value: '0',
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _StatCard(
-                    icon: Icons.star,
-                    label: 'Reward Points',
-                    value: '0',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-
-            // Report Issue button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text('Report a New Issue'),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ReportIssueScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const Spacer(),
-
-            // Logout
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/login',
-                    (route) => false,
-                  );
-                },
-                child: const Text('Logout'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          children: [
-            Icon(icon, size: 32),
-            const SizedBox(height: 8),
+            const Icon(Icons.verified_user, size: 80, color: Colors.green),
+            const SizedBox(height: 20),
             Text(
-              value,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              "Welcome, ${user?.email ?? 'User'}!",
+              style: const TextStyle(fontSize: 18),
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.grey),
+            const SizedBox(height: 40),
+            
+            // REPORT ISSUE BUTTON
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ReportIssueScreen()),
+                );
+              },
+              icon: const Icon(Icons.camera_alt),
+              label: const Text("Report New Issue", style: TextStyle(fontSize: 18)),
             ),
           ],
         ),

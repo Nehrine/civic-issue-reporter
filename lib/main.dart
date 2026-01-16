@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // REQUIRED IMPORT
 import 'auth/login_page.dart';
 import 'auth/signup_page.dart';
 import 'dashboard/dashboard_page.dart';
-import 'report_issue_screen.dart';
+// If you have a separate file for report screen, import it too
+import 'report_issue_screen.dart'; 
 
-void main() {
-  runApp(const CivicIssueApp());
+void main() async { // <--- 1. MUST BE ASYNC
+  // 2. These two lines are MANDATORY for Firebase
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); 
+
+  runApp(const MyApp());
 }
 
-/// TEMP auth state (NO Firebase yet)
-class CivicIssueApp extends StatelessWidget {
-  const CivicIssueApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,14 +23,16 @@ class CivicIssueApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Civic Issue Reporter',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.deepPurple,
+        useMaterial3: true,
       ),
-      initialRoute: '/login',
+      // Start at Login Page
+      initialRoute: '/', 
       routes: {
-        '/login': (context) => LoginPage(),
-        '/signup': (context) => SignupPage(),
-        '/dashboard': (context) => DashboardPage(),
-        '/report': (context) => const ReportIssueScreen(),
+        '/': (context) => const LoginPage(),
+        '/signup': (context) => const SignupPage(),
+        '/dashboard': (context) => const DashboardPage(),
+        // Add other routes if you navigate by name
       },
     );
   }

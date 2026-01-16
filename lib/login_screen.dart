@@ -16,24 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
 
-  // ---------------- HELPER: SHOW MESSAGE ----------------
-  void showMessage(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green, // Red for errors
-      ),
-    );
-  }
-
   // ---------------- EMAIL LOGIN ----------------
   Future<void> loginWithEmail() async {
-    // 🔥 VALIDATION CHECK
-    if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
-      showMessage('Please enter both Email and Password ❌', isError: true);
-      return; // Stop here!
-    }
-
     setState(() => _isLoading = true);
 
     try {
@@ -43,22 +27,15 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       showMessage('Login successful ✅');
-      // Navigate to Dashboard here if needed
     } on FirebaseAuthException catch (e) {
-      showMessage(e.message ?? 'Login failed', isError: true);
+      showMessage(e.message ?? 'Login failed');
     }
 
-    if (mounted) setState(() => _isLoading = false);
+    setState(() => _isLoading = false);
   }
 
   // ---------------- EMAIL SIGNUP ----------------
   Future<void> createAccount() async {
-    // 🔥 VALIDATION CHECK
-    if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
-      showMessage('Please enter both Email and Password ❌', isError: true);
-      return; // Stop here!
-    }
-
     setState(() => _isLoading = true);
 
     try {
@@ -69,10 +46,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       showMessage('Account created 🎉');
     } on FirebaseAuthException catch (e) {
-      showMessage(e.message ?? 'Signup failed', isError: true);
+      showMessage(e.message ?? 'Signup failed');
     }
 
-    if (mounted) setState(() => _isLoading = false);
+    setState(() => _isLoading = false);
   }
 
   // ---------------- GOOGLE SIGN IN ----------------
@@ -84,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
           await GoogleSignIn().signIn();
 
       if (googleUser == null) {
-        showMessage('Google sign-in cancelled', isError: true);
+        showMessage('Google sign-in cancelled');
         setState(() => _isLoading = false);
         return;
       }
@@ -101,10 +78,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
       showMessage('Google login successful ✅');
     } catch (e) {
-      showMessage('Google sign-in failed: $e', isError: true);
+      showMessage('Google sign-in failed');
     }
 
-    if (mounted) setState(() => _isLoading = false);
+    setState(() => _isLoading = false);
+  }
+
+  // ---------------- UI MESSAGE ----------------
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   // ---------------- CLEANUP ----------------
@@ -126,17 +110,12 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Logo or Icon (Optional)
-                const Icon(Icons.lock_person, size: 80, color: Colors.deepPurple),
-                const SizedBox(height: 20),
-
                 // Email field
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Email',
-                    prefixIcon: Icon(Icons.email),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -149,7 +128,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscureText: true,
                   decoration: const InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -166,9 +144,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ElevatedButton(
                         onPressed: loginWithEmail,
                         style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
+                          minimumSize:
+                              const Size(double.infinity, 48),
                         ),
                         child: const Text('Login'),
                       ),
@@ -179,25 +156,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       OutlinedButton(
                         onPressed: createAccount,
                         style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
+                          minimumSize:
+                              const Size(double.infinity, 48),
                         ),
                         child: const Text('Create Account'),
                       ),
 
-                      const SizedBox(height: 20),
-                      const Divider(),
                       const SizedBox(height: 20),
 
                       // Google Sign-In
                       ElevatedButton.icon(
                         onPressed: loginWithGoogle,
                         icon: const Icon(Icons.login),
-                        label: const Text('Continue with Google'),
+                        label:
+                            const Text('Continue with Google'),
                         style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          elevation: 2,
+                          minimumSize:
+                              const Size(double.infinity, 48),
                         ),
                       ),
                     ],
@@ -210,4 +185,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
 
