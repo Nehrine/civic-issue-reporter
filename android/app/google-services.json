@@ -1,44 +1,26 @@
 {
   "project_info": {
-    "project_number": "315123952424",
-    "project_id": "civic-issue-reporter-9e29b",
-    "storage_bucket": "civic-issue-reporter-9e29b.firebasestorage.app"
+    "project_number": "434476549320",
+    "project_id": "civic-issue-app-9fafb",
+    "storage_bucket": "civic-issue-app-9fafb.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:315123952424:android:594206a44c660395e63e1d",
+        "mobilesdk_app_id": "1:434476549320:android:bfccf6ebc49b415a4851fd",
         "android_client_info": {
           "package_name": "com.example.civic_issue_app"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "315123952424-apqut1vgq6asr0tjamtnauk3i7jhdii6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.civic_issue_app",
-            "certificate_hash": "1e1678ecc35544d05dfa2917af0851e476426d96"
-          }
-        },
-        {
-          "client_id": "315123952424-tse4iose350mrho8rkhrog2dqqeaovgb.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBSOLGgFCi9l6rkjHqB_Xy-WR999S8_YJw"
+          "current_key": "AIzaSyDZK8_a_TJ9RMIN1HSz4O1RAbOHZTuXGAg"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "315123952424-tse4iose350mrho8rkhrog2dqqeaovgb.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

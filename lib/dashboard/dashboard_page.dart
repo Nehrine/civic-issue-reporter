@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../issues/report_issue_page.dart';
+import '../report_issue_screen.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -69,7 +69,7 @@ class DashboardPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const ReportIssuePage(),
+                      builder: (_) => ReportIssueScreen(),
                     ),
                   );
                 },

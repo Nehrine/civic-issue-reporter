@@ -4,10 +4,10 @@ buildscript {
         mavenCentral()
     }
     dependencies {
+        // This line is CRITICAL for Firebase:
         classpath("com.google.gms:google-services:4.4.0")
     }
 }
-
 
 allprojects {
     repositories {
@@ -16,10 +16,7 @@ allprojects {
     }
 }
 
-val newBuildDir: Directory =
-    rootProject.layout.buildDirectory
-        .dir("../../build")
-        .get()
+val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 
 subprojects {
