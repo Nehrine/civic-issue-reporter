@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class GeminiService {
   // ⚠️ PASTE YOUR WORKING API KEY HERE
-  static const String apiKey = "AIzaSyA4JEt4F9_52sfNrHgwSr914DgddNVpZyw"; 
+  static const String apiKey = "AIzaSyCLsgVpxDZx23OI-KUzkXPhwF5IlkpVaCs"; 
 
   // 🚀 THE FAILOVER LIST: It will try these one by one until it works
   final List<String> _modelsToTry = [
