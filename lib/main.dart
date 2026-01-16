@@ -4,7 +4,6 @@ import 'auth/login_page.dart';
 import 'auth/signup_page.dart';
 import 'dashboard/dashboard_page.dart';
 // If you have a separate file for report screen, import it too
-import 'report_issue_screen.dart'; 
 
 void main() async { // <--- 1. MUST BE ASYNC
   // 2. These two lines are MANDATORY for Firebase

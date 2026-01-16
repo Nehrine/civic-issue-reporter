@@ -4,7 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'ai/ai_image_analyzer.dart'; // Ensure this matches your file path
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'ai/ai_image_analyzer.dart'; 
 
 class ReportIssueScreen extends StatefulWidget {
   const ReportIssueScreen({super.key});
@@ -16,103 +18,32 @@ class ReportIssueScreen extends StatefulWidget {
 class _ReportIssueScreenState extends State<ReportIssueScreen> {
   File? _selectedImage;
   bool _isAnalyzing = false;
-  final TextEditingController _reportController = TextEditingController();
-  final GeminiService _geminiService = GeminiService();
   
-  // Store full address and coordinates
+  // Text Controllers
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
+  final TextEditingController _letterController = TextEditingController();
+  
+  final GeminiService _geminiService = GeminiService();
   String? _currentAddress;
-  double? _latitude;
-  double? _longitude;
 
-  @override
-  void dispose() {
-    _reportController.dispose();
-    super.dispose();
-  }
-
-  // 1. Get Location & Address
+  // 1. Get Location
   Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enable GPS")));
-      return;
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
-    }
-
-    // A. Get Coordinates
     try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high
-      );
-
-      setState(() {
-        _latitude = position.latitude;
-        _longitude = position.longitude;
-      });
-
-      // B. Convert to Address (Reverse Geocoding)
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude, 
-        position.longitude
-      );
-
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        // Format: "Street, Locality, Postal Code"
-        String address = "${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}";
-        
-        if (mounted) {
-          setState(() {
-            _currentAddress = address;
-            // Add to text box nicely if not already there
-            if (!_reportController.text.contains("Location:")) {
-               _reportController.text += "\n\n📍 Location: $address";
-            }
-          });
-        }
+        setState(() {
+          _currentAddress = "${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}";
+        });
       }
     } catch (e) {
       print("Location Error: $e");
     }
   }
 
-  // 2. Open Google Maps (Updated Logic)
-  Future<void> _openMap() async {
-    if (_latitude == null || _longitude == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Wait for location to be detected..."))
-      );
-      return;
-    }
-
-    // Use the 'geo' scheme which opens the Maps app directly
-    final Uri mapUri = Uri.parse("geo:$_latitude,$_longitude?q=$_latitude,$_longitude");
-
-    try {
-      if (await canLaunchUrl(mapUri)) {
-        await launchUrl(mapUri);
-      } else {
-        // Fallback to web link if app isn't installed
-        final Uri webUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$_latitude,$_longitude");
-        await launchUrl(webUri, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      print("Map Error: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not open Maps")));
-      }
-    }
-  }
-
-  // 3. Pick Image Function
+  // 2. Analyze Image
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);
@@ -120,163 +51,163 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
-        _reportController.text = "Loading AI analysis...";
         _isAnalyzing = true;
       });
-      // Start both tasks
-      await _analyzeImage();
-      await _getCurrentLocation(); 
-    }
-  }
-
-  Future<void> _analyzeImage() async {
-    if (_selectedImage == null) return;
-    try {
-      final result = await _geminiService.analyzeImage(_selectedImage!);
-      if (!mounted) return;
-      setState(() {
-        _isAnalyzing = false;
-        if (result != null) {
-          _reportController.text = result;
-        } else {
-           _reportController.text = "Could not identify issue. Please type manually.";
-        }
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isAnalyzing = false;
-        _reportController.text = "Error connecting to AI. Check Internet.";
-      });
-    }
-  }
-
-  void _showPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext bc) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                  leading: const Icon(Icons.photo_library),
-                  title: const Text('Photo Gallery'),
-                  onTap: () {
-                    _pickImage(ImageSource.gallery);
-                    Navigator.of(context).pop();
-                  }),
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text('Camera'),
-                onTap: () {
-                  _pickImage(ImageSource.camera);
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          ),
-        );
+      await _getCurrentLocation();
+      
+      // ✅ CORRECT WAY TO HANDLE THE MAP RESULT
+      try {
+        final Map<String, String> result = await _geminiService.analyzeImage(_selectedImage!);
+        
+        setState(() {
+          _isAnalyzing = false;
+          // Unpack the 3 items into their own boxes
+          _titleController.text = result['title'] ?? "Issue Detected";
+          _descController.text = result['description'] ?? "No description generated.";
+          // Add location to the letter automatically
+          String letterBody = result['letter'] ?? "";
+          _letterController.text = "$letterBody\n\nLocation: ${_currentAddress ?? 'Unknown'}";
+        });
+      } catch (e) {
+        setState(() {
+          _isAnalyzing = false;
+          _descController.text = "Error analyzing image: $e";
+        });
       }
+    }
+  }
+
+  // 3. Send Email
+  Future<void> _sendEmail() async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: '', 
+      queryParameters: {
+        'subject': _titleController.text,
+        'body': _letterController.text,
+      },
     );
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+    }
+  }
+
+  // 4. Submit to Community
+  Future<void> _submitReport() async {
+    if (_titleController.text.isEmpty) return;
+
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    await FirebaseFirestore.instance.collection('reports').add({
+      'userId': user.uid,
+      'userEmail': user.email,
+      'title': _titleController.text,
+      'description': _descController.text,
+      'letter': _letterController.text,
+      'location': _currentAddress ?? "Unknown",
+      'timestamp': FieldValue.serverTimestamp(),
+      'status': 'Pending',
+      'upvotes': 0,
+      'flags': 0,
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report Published!')));
+      Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Logic to disable button if AI is running OR box is empty
-    bool canSubmit = !_isAnalyzing && _reportController.text.isNotEmpty;
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Report Issue')),
+      appBar: AppBar(title: const Text('New Report')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Image Box
             GestureDetector(
               onTap: () => _showPicker(context),
               child: Container(
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey),
-                ),
+                height: 180,
+                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(12)),
                 child: _selectedImage == null
-                    ? const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
-                        Text('Tap to add photo'),
-                      ])
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.file(_selectedImage!, fit: BoxFit.cover),
-                      ),
+                    ? const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)
+                    : Image.file(_selectedImage!, fit: BoxFit.cover),
               ),
             ),
-            const SizedBox(height: 16),
-            
-            // Progress Bar
+            const SizedBox(height: 10),
             if (_isAnalyzing) const LinearProgressIndicator(),
             
-            const SizedBox(height: 16),
-
-            // Location Display & Button
-            if (_currentAddress != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200)
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(_currentAddress!, style: const TextStyle(fontWeight: FontWeight.w500)),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.map, color: Colors.blue),
-                      onPressed: _openMap, // OPENS GOOGLE MAPS
-                      tooltip: "View on Map",
-                    )
-                  ],
-                ),
+            if (_currentAddress != null) 
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text("📍 $_currentAddress", style: const TextStyle(color: Colors.blue)),
               ),
 
+            const SizedBox(height: 10),
+            TextField(controller: _titleController, decoration: const InputDecoration(labelText: "Issue Title", border: OutlineInputBorder())),
+            const SizedBox(height: 10),
+            TextField(controller: _descController, maxLines: 2, decoration: const InputDecoration(labelText: "Description", border: OutlineInputBorder())),
+            
+            const SizedBox(height: 20),
+            const Text("Formal Complaint Letter", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 5),
+            
             TextField(
-              controller: _reportController,
-              decoration: const InputDecoration(labelText: 'Issue Description', border: OutlineInputBorder()),
-              maxLines: 6,
-              // Update state when text changes to enable/disable button
-              onChanged: (text) {
-                setState(() {}); 
-              },
+              controller: _letterController, 
+              maxLines: 8, 
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                filled: true,
+                fillColor: Colors.grey[50],
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.mail, color: Colors.deepPurple),
+                  onPressed: _sendEmail,
+                  tooltip: "Open in Mail App",
+                )
+              )
             ),
-            
-            const SizedBox(height: 24),
-            
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  // Conditional Color: Purple if ready, Grey if not
-                  backgroundColor: canSubmit ? Colors.deepPurple : Colors.grey, 
-                  foregroundColor: Colors.white
-                ),
-                // Disable button (null) if not ready
-                onPressed: canSubmit ? () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report Submitted!')));
-                    Navigator.pop(context);
-                } : null, 
-                child: Text(_isAnalyzing ? 'Analyzing...' : 'Submit Issue'),
-              ),
-            ),
+
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
+              onPressed: _submitReport,
+              child: const Text("Submit Report"),
+            )
           ],
         ),
       ),
     );
+  }
+
+  void _showPicker(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return SafeArea(
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                    leading: const Icon(Icons.photo_library),
+                    title: const Text('Photo Gallery'),
+                    onTap: () {
+                      _pickImage(ImageSource.gallery);
+                      Navigator.of(context).pop();
+                    }),
+                ListTile(
+                  leading: const Icon(Icons.photo_camera),
+                  title: const Text('Camera'),
+                  onTap: () {
+                    _pickImage(ImageSource.camera);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          );
+        });
   }
 }
