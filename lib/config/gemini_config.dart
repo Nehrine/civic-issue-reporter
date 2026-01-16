@@ -1,5 +1,5 @@
 
 // File: lib/config/gemini_config.dart
 class GeminiConfig {
-  static const String apiKey = "AIzaSyA2W7Z0aB3M3Ytu23H0nYDoEY3mDojLeo0";
+  static const String apiKey = "AIzaSyACq_YWzLr_FiMfRpji-Zbrp_-z0GDviT8";
 }
