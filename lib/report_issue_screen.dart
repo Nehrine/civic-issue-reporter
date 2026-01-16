@@ -1,7 +1,7 @@
-import 'dart:async'; // Needed for Timeout safety
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Needed for Copy functionality
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -22,7 +22,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   bool _isAnalyzing = false;
   bool _isSubmitting = false;
   
-  // Text Controllers
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _recipientController = TextEditingController();
@@ -33,19 +32,17 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   double? _latitude;
   double? _longitude;
 
-  // 1. Get Location (With Permission Checks)
+  // 1. Get Location (Permissions Checked)
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if GPS is enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enable GPS Location.')));
       return;
     }
 
-    // Check Permissions
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -53,11 +50,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location permissions are denied.')));
         return;
       }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location permissions are permanently denied. Go to Settings.')));
-      return;
     }
 
     try {
@@ -81,16 +73,13 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
   // 2. Open Google Maps
   Future<void> _openGoogleMaps() async {
-    if (_latitude == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Location not found yet.")));
-      return;
-    }
+    if (_latitude == null) return;
     final Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$_latitude,$_longitude");
     try {
       if (await canLaunchUrl(googleMapsUrl)) {
         await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not launch Maps.")));
+         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not launch Maps.")));
       }
     } catch (e) {
       print(e);
@@ -115,7 +104,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
           _isAnalyzing = false;
           _titleController.text = result['title'] ?? "Issue Detected";
           _descController.text = result['description'] ?? "No description generated.";
-          _recipientController.text = "commissioner@kochi.gov.in"; // Default Email
+          _recipientController.text = "commissioner@kochi.gov.in"; 
           String letterBody = result['letter'] ?? "";
           _letterController.text = "$letterBody\n\nLocation: ${_currentAddress ?? 'Unknown'}";
         });
@@ -128,13 +117,13 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     }
   }
 
-  // 4. Send Email (FIXED: Removes + signs using manual encoding)
+  // 4. Send Email (Encoding Fixed)
   Future<void> _sendEmail() async {
     final String recipient = _recipientController.text.trim();
     final String subject = "Civic Complaint: ${_titleController.text}";
     final String body = _letterController.text;
 
-    // Helper function to force spaces to be %20 instead of +
+    // Helper to fix "plus signs" in body
     String? encodeQueryParameters(Map<String, String> params) {
       return params.entries
           .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
@@ -167,7 +156,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Letter copied to clipboard!")));
   }
 
-  // 6. Submit Report (FIXED: 10-Second Timeout)
+  // 6. Submit Report (Timeout Safety)
   Future<void> _submitReport() async {
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter a Title!")));
@@ -175,14 +164,14 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     }
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Not logged in! Please restart app.")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Not logged in! Restart app.")));
       return;
     }
     
     setState(() => _isSubmitting = true);
 
     try {
-      // 10-Second Timeout to stop infinite loading
+      // 10-Second Timeout for Network blocks
       await FirebaseFirestore.instance.collection('reports').add({
         'userId': user.uid,
         'userEmail': user.email,
@@ -204,13 +193,10 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       }
     } on TimeoutException catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Network Timeout: Database connection blocked. Try Mobile Data."),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
-          )
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Network Timeout: Connect to Mobile Data (Hotspot)."),
+          backgroundColor: Colors.red,
+        ));
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -228,7 +214,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Image Box
             GestureDetector(
               onTap: () => _showPicker(context),
               child: Container(
@@ -242,7 +227,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             const SizedBox(height: 10),
             if (_isAnalyzing) const LinearProgressIndicator(),
             
-            // Location Row
             if (_currentAddress != null) 
               Container(
                 margin: const EdgeInsets.only(bottom: 10),
@@ -256,7 +240,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                     IconButton(
                       icon: const Icon(Icons.map, color: Colors.green),
                       onPressed: _openGoogleMaps,
-                      tooltip: "Open in Maps",
                     )
                   ],
                 ),
@@ -265,12 +248,8 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             TextField(controller: _titleController, decoration: const InputDecoration(labelText: "Issue Title", border: OutlineInputBorder())),
             const SizedBox(height: 10),
             TextField(controller: _descController, maxLines: 2, decoration: const InputDecoration(labelText: "Description", border: OutlineInputBorder())),
-            
             const SizedBox(height: 20),
-            const Text("Official Complaint Details", style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-
-            // Recipient Email Field
+            
             TextField(
               controller: _recipientController,
               decoration: const InputDecoration(
@@ -281,7 +260,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             ),
             const SizedBox(height: 10),
             
-            // Letter Field
             TextField(
               controller: _letterController, 
               maxLines: 8, 
@@ -293,7 +271,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
               )
             ),
 
-            // Action Buttons Row
             const SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -314,8 +291,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             ),
 
             const SizedBox(height: 20),
-            
-            // Submit Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple, 
@@ -324,11 +299,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
               ),
               onPressed: _isSubmitting ? null : _submitReport,
               child: _isSubmitting 
-                  ? const SizedBox(
-                      height: 20, 
-                      width: 20, 
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                    )
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Text("Submit Report"),
             )
           ],
