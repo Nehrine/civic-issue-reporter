@@ -12,7 +12,20 @@
           "package_name": "com.example.civic_issue_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "434476549320-1obllhapjeap0k6frd1s558imstlc4j2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.civic_issue_app",
+            "certificate_hash": "1e1678ecc35544d05dfa2917af0851e476426d96"
+          }
+        },
+        {
+          "client_id": "434476549320-8pub4h9t21fj0ef4dk8si2qieanpdcni.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDZK8_a_TJ9RMIN1HSz4O1RAbOHZTuXGAg"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "434476549320-8pub4h9t21fj0ef4dk8si2qieanpdcni.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
